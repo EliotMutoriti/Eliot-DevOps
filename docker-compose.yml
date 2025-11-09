@@ -13,7 +13,6 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - two-tier
-    restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
@@ -36,7 +35,6 @@ services:
       - two-tier
     depends_on:
       - mysql
-    restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
       interval: 10s
