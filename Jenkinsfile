@@ -1,24 +1,28 @@
 pipeline {
     agent any
+    environment {
+        IMAGE = 'eliot-jenkins-flask'
+        TAG   = 'latest'
+    }
     stages {
-        stage('Clone Code') {
+        stage('Clone') {
             steps {
-                // Replace with your GitHub repository URL
-                git branch: 'main', url:'https://github.com/EliotMutoriti/Eliot-DevOps.git'
+                git branch: 'main', url: 'https://github.com/EliotMutoriti/Eliot-DevOps.git'
             }
         }
-        stage('Build Docker Image') {
+        stage('Build & Deploy') {
             steps {
-                sh 'docker build -t flask-app:latest .'
+                sh '''
+                    docker compose down --remove-orphans || true
+                    docker compose up -d --build
+                    sleep 5
+                    curl -f http://localhost:5000 || (docker compose logs flask && exit 1)
+                '''
             }
         }
-        stage('Deploy with Docker Compose') {
-            steps {
-                // Stop existing containers if they are running
-                sh 'docker compose down || true'
-                // Start the application, rebuilding the flask image
-                sh 'docker compose up -d --build'
-            }
-        }
+    }
+    post {
+        success { echo "App is LIVE at http://$(curl -s ifconfig.me):5000" }
+        failure { sh 'docker compose logs' }
     }
 }
